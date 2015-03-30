@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">CrashCamera</string>
+
+    <string name="action_settings">Settings</string>
+
+    <string name="button_make_picture">Make picture</string>
+    <string name="button_open_elements">Open elements</string>
+    <string name="button_open_preview">Open preview</string>
+    <string name="button_go_back">Go Back</string>
+
+    <string name="toast_picture_saved">Picture saved</string>
+    <string name="toast_7_pictures">Sorry, but You can\'t save more than 7 pictures</string>
+    <string name="toast_picture_not_saved">Sorry, but picture not saved</string>
+</resources>
