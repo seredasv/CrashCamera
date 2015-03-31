@@ -2,7 +2,6 @@ package com.sereda.crashcamera.app.adapters;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.hardware.Camera;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,29 +9,35 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
 import com.sereda.crashcamera.app.R;
-import com.sereda.crashcamera.app.fragments.CameraFragment;
 import com.sereda.crashcamera.app.utils.CropSquareTransformation;
 import com.sereda.crashcamera.app.utils.DBHelper;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
 
-public class PicturesAdapter extends SimpleCursorAdapter {
+public abstract class AbstractPreviewAdapter extends SimpleCursorAdapter {
     private static final int IMAGE_SIZE = 100;
     private int layout;
     private Context context;
     private Cursor cursor;
     private File dir;
 
-    public PicturesAdapter(Context context, int layout, Cursor cursor, String[] from, int[] to, int flags) {
+    public AbstractPreviewAdapter(Context context, int layout, Cursor cursor, String[] from, int[] to, int flags) {
         super(context, layout, cursor, from, to, flags);
         this.layout = layout;
         this.context = context;
         this.cursor = cursor;
 
         dir = context.getFilesDir();
+    }
+
+    public abstract ImageView setImageView();
+
+    public void setBigPicture() {
+        if (null != setImageView()) {
+            setPicture(setImageView(), cursor);
+        }
     }
 
     @Override
@@ -43,7 +48,7 @@ public class PicturesAdapter extends SimpleCursorAdapter {
 
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
-        ViewHolder holder;
+        final ViewHolder holder;
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         if (null == convertView) {
@@ -61,28 +66,29 @@ public class PicturesAdapter extends SimpleCursorAdapter {
                 @Override
                 public void onClick(View v) {
                     if (cursor.moveToPosition(position)) {
-                        int id = cursor.getInt(cursor.getColumnIndex(DBHelper.ID));
-
-                        CameraFragment.updatedID = id;
-                        CameraFragment.isUpdated = true;
+                        setBigPicture();
                     }
                 }
             });
 
-            String fileName = cursor.getString(cursor.getColumnIndex(DBHelper.PHOTO_FILE_NAME));
-            String stringUri = cursor.getString(cursor.getColumnIndex(DBHelper.PHOTO_URI));
-            Uri uri = Uri.parse(stringUri);
-
-            File file = new File(dir, fileName);
-            if (file.exists()) {
-                Picasso.with(context).load(uri).transform(new CropSquareTransformation()).resize(IMAGE_SIZE, IMAGE_SIZE)
-                        .placeholder(R.drawable.image_view_empty_photo).into(holder.imageView);
-            } else {
-                Picasso.with(context).load(R.drawable.image_view_empty_photo).resize(IMAGE_SIZE, IMAGE_SIZE).into(holder.imageView);
-            }
+            setPicture(holder.imageView, cursor);
         }
 
         return convertView;
+    }
+
+    private void setPicture(ImageView imageView, Cursor cursor) {
+        String fileName = cursor.getString(cursor.getColumnIndex(DBHelper.PHOTO_FILE_NAME));
+        String stringUri = cursor.getString(cursor.getColumnIndex(DBHelper.PHOTO_URI));
+        Uri uri = Uri.parse(stringUri);
+
+        File file = new File(dir, fileName);
+        if (file.exists()) {
+            Picasso.with(context).load(uri).transform(new CropSquareTransformation()).resize(IMAGE_SIZE, IMAGE_SIZE)
+                    .placeholder(R.drawable.image_view_empty_photo).into(imageView);
+        } else {
+            Picasso.with(context).load(R.drawable.image_view_empty_photo).resize(IMAGE_SIZE, IMAGE_SIZE).into(imageView);
+        }
     }
 
     private class ViewHolder {

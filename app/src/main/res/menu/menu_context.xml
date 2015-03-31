@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+            android:id="@+id/context_menu_cancel"
+            android:visible="true"
+            android:title="@string/context_menu_cancel"/>
+    <item
+            android:id="@+id/context_menu_scratch"
+            android:visible="true"
+            android:title="@string/context_menu_scratch"/>
+    <item
+            android:id="@+id/context_menu_dent"
+            android:visible="true"
+            android:title="@string/context_menu_dent"/>
+</menu>

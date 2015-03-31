@@ -1,13 +1,17 @@
 package com.sereda.crashcamera.app.fragments;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.*;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.GridView;
 import com.sereda.crashcamera.app.R;
+import com.sereda.crashcamera.app.activities.PreviewActivity;
 import com.sereda.crashcamera.app.adapters.ElementsAdapter;
 import com.sereda.crashcamera.app.utils.DBHelper;
 import com.twotoasters.jazzylistview.JazzyGridView;
@@ -22,7 +26,7 @@ public class ElementsFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         Bundle bundle = this.getArguments();
-        if (bundle != null) {
+        if (null != bundle) {
             id = bundle.getInt(DBHelper.ID);
         }
 
@@ -32,6 +36,26 @@ public class ElementsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_elements, container, false);
+
+        Button buttonOpenPreview = (Button) view.findViewById(R.id.button_open_preview);
+        buttonOpenPreview.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.e("mylog", String.valueOf(id));
+                Intent intent = new Intent(getActivity(), PreviewActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putInt(DBHelper.ID, id);
+                intent.putExtras(bundle);
+                startActivity(intent);
+            }
+        });
+        Button buttonComeBack = (Button) view.findViewById(R.id.button_come_back);
+        buttonComeBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getActivity().onBackPressed();
+            }
+        });
 
         return view;
     }

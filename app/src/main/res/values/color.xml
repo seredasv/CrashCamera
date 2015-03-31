@@ -2,4 +2,6 @@
 <resources>
     <!--activatedBackgroundIndicator-->
     <color name="list_view_activated_background_indicator">#f0683e</color>
+    <color name="frame_color">#20C0C0C0</color>
+    <color name="text_color">#50C0C0C0</color>
 </resources>

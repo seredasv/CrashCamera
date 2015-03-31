@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CrashCamera</string>
+    <string name="action_settings">Настройки</string>
+    <string name="button_go_back">Вернуться</string>
+    <string name="button_make_picture">Сделать фото</string>
+    <string name="button_open_elements">Открыть фотографии</string>
+    <string name="button_open_preview">Открыть просмотр</string>
+    <string name="context_menu_cancel">Отменить</string>
+    <string name="context_menu_dent">Вмятина</string>
+    <string name="context_menu_scratch">Царапина</string>
+    <string name="mask_of_damages">Маска повреждений</string>
+    <string name="toast_7_pictures">Извините, но вы не можете сохранить более 7 фотографий</string>
+    <string name="toast_picture_not_saved">Извините, но фотография не сохранена</string>
+    <string name="toast_picture_saved">Фотография сохранена</string>
+    <string name="toast_picture_updated">Фотография обновлена</string>
+    <string name="toast_exit">Для выхода коснитесь еще раз</string>
+</resources>

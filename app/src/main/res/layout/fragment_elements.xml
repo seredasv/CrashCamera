@@ -39,7 +39,7 @@
                 android:text="@string/button_go_back"/>
 
         <Button
-                android:id="@+id/button_open_elements"
+                android:id="@+id/button_open_preview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"

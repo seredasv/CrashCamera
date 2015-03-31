@@ -28,13 +28,15 @@ import com.sereda.crashcamera.app.utils.DBHelper;
 import org.lucasr.twowayview.TwoWayView;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
 public class CameraFragment extends Fragment {
+    public static boolean isUpdated = false;
+    public static int updatedID;
+    private static int QUANTITY_OF_PERMITTED_PHOTO = 7;
     private int id;
     private Camera camera;
     private SurfaceView surfaceView;
@@ -51,24 +53,35 @@ public class CameraFragment extends Fragment {
         public void onPictureTaken(byte[] data, Camera camera) {
             String fileName = UUID.randomUUID().toString() + ".jpg";
 
-            FileOutputStream fos = null;
             boolean success = true;
+            if (isUpdated) {
+                QUANTITY_OF_PERMITTED_PHOTO = 8;
+            } else {
+                QUANTITY_OF_PERMITTED_PHOTO = 7;
+            }
 
-            try {
-                fos = getActivity().openFileOutput(fileName, Context.MODE_PRIVATE);
-                fos.write(data);
-            } catch (Exception e) {
-                e.printStackTrace();
-                success = false;
-            } finally {
+            if (QUANTITY_OF_PERMITTED_PHOTO != picturesQuantity()) {
+                FileOutputStream fos = null;
+
                 try {
-                    if (null != fos) {
-                        fos.close();
-                    }
+                    fos = getActivity().openFileOutput(fileName, Context.MODE_PRIVATE);
+                    fos.write(data);
                 } catch (Exception e) {
                     e.printStackTrace();
                     success = false;
+                } finally {
+                    try {
+                        if (null != fos) {
+                            fos.close();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        success = false;
+                    }
                 }
+            } else {
+                Toast.makeText(getActivity(), getString(R.string.toast_7_pictures), Toast.LENGTH_SHORT).show();
+                success = false;
             }
 
             if (success) {
@@ -86,7 +99,7 @@ public class CameraFragment extends Fragment {
                     db.insert(DBHelper.TABLE_ITEM, null, cv);
                     cv.clear();
 
-                    if (7 != picturesQuantity()) {
+                    if (!isUpdated) {
                         File dir = getActivity().getFilesDir();
                         file = new File(dir, fileName);
 
@@ -105,10 +118,25 @@ public class CameraFragment extends Fragment {
 
                         createAdapter(view);
                     } else {
-                        Toast.makeText(getActivity(), getString(R.string.toast_7_pictures), Toast.LENGTH_SHORT).show();
                         File dir = getActivity().getFilesDir();
-                        File file = new File(dir, fileName);
-                        file.delete();
+                        file = new File(dir, fileName);
+
+                        try {
+                            rotateImage(file.toString());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                        cv.put(DBHelper.PHOTO_ITEM_ID, id);
+                        cv.put(DBHelper.PHOTO_FILE_NAME, fileName);
+                        cv.put(DBHelper.PHOTO_URI, String.valueOf(Uri.fromFile(file)));
+                        db.update(DBHelper.TABLE_PHOTO, cv, DBHelper.ID + " = ?", new String[]{String.valueOf(updatedID)});
+                        cv.clear();
+                        Toast.makeText(getActivity(), getString(R.string.toast_picture_saved), Toast.LENGTH_SHORT).show();
+
+                        createAdapter(view);
+
+                        isUpdated = false;
                     }
                 }
 
@@ -145,7 +173,8 @@ public class CameraFragment extends Fragment {
     }
 
     private void createAdapter(View view) {
-        Cursor cursor = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_PHOTO + " WHERE " + DBHelper.PHOTO_ITEM_ID + " = ? ", new String[]{String.valueOf(id)});
+        Cursor cursor = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_PHOTO + " WHERE " + DBHelper.PHOTO_ITEM_ID
+                + " = ? ORDER BY " + DBHelper.ID + " ASC", new String[]{String.valueOf(id)});
 
         String[] from = new String[]{DBHelper.PHOTO_URI};
         int[] to = new int[]{R.id.two_way_view_item_iv_picture};
