@@ -18,7 +18,7 @@
                 android:descendantFocusability="blocksDescendants"
                 android:divider="@null"
                 android:horizontalSpacing="1sp"
-                android:numColumns="3"
+                android:numColumns="2"
                 android:verticalSpacing="2sp"
                 app:effect="tilt"
                 app:only_animate_new_items="false" />

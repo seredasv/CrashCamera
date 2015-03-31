@@ -6,10 +6,14 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.Parameters;
 import android.hardware.Camera.Size;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -24,6 +28,7 @@ import com.sereda.crashcamera.app.utils.DBHelper;
 import org.lucasr.twowayview.TwoWayView;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
@@ -35,6 +40,7 @@ public class CameraFragment extends Fragment {
     private SurfaceView surfaceView;
     private SQLiteDatabase db;
     private View view;
+    private File file;
     private Camera.ShutterCallback shutterCallback = new Camera.ShutterCallback() {
         @Override
         public void onShutter() {
@@ -82,7 +88,13 @@ public class CameraFragment extends Fragment {
 
                     if (7 != picturesQuantity()) {
                         File dir = getActivity().getFilesDir();
-                        File file = new File(dir, fileName);
+                        file = new File(dir, fileName);
+
+                        try {
+                            rotateImage(file.toString());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
 
                         cv.put(DBHelper.PHOTO_ITEM_ID, id);
                         cv.put(DBHelper.PHOTO_FILE_NAME, fileName);
@@ -105,6 +117,32 @@ public class CameraFragment extends Fragment {
             }
         }
     };
+
+    public static int getCameraPhotoOrientation(Context context, Uri imageUri, String imagePath) {
+        int rotate = 0;
+        try {
+            context.getContentResolver().notifyChange(imageUri, null);
+            File imageFile = new File(imagePath);
+            ExifInterface exif = new ExifInterface(imageFile.getAbsolutePath());
+            int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED);
+            switch (orientation) {
+                case ExifInterface.ORIENTATION_NORMAL:
+                    rotate = 180;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    rotate = 90;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    rotate = 0;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    rotate = 270;
+                    break;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return rotate;
+    }
 
     private void createAdapter(View view) {
         Cursor cursor = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_PHOTO + " WHERE " + DBHelper.PHOTO_ITEM_ID + " = ? ", new String[]{String.valueOf(id)});
@@ -190,7 +228,7 @@ public class CameraFragment extends Fragment {
                     return;
                 }
 
-                setCameraDisplayOrientation(getActivity(), 1, camera);
+                setCameraDisplayOrientation(getActivity(), CameraInfo.CAMERA_FACING_FRONT, camera);
                 Parameters parameters = camera.getParameters();
                 Size size = getOptimalPreviewSize(parameters.getSupportedPreviewSizes(), width, height);
                 if (null != size) {
@@ -217,6 +255,25 @@ public class CameraFragment extends Fragment {
         });
 
         return view;
+    }
+
+    public void rotateImage(String fileName) throws IOException {
+        BitmapFactory.Options bounds = new BitmapFactory.Options();
+        bounds.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(fileName, bounds);
+
+        BitmapFactory.Options opts = new BitmapFactory.Options();
+        Bitmap bm = BitmapFactory.decodeFile(fileName, opts);
+
+        int rotationAngle = getCameraPhotoOrientation(getActivity(), Uri.fromFile(file), file.toString());
+
+        Matrix matrix = new Matrix();
+        matrix.postRotate(rotationAngle, (float) bm.getWidth() / 2, (float) bm.getHeight() / 2);
+        Bitmap rotatedBitmap = Bitmap.createBitmap(bm, 0, 0, bounds.outWidth, bounds.outHeight, matrix, true);
+        FileOutputStream fos = new FileOutputStream(fileName);
+        rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+        fos.flush();
+        fos.close();
     }
 
     private void setCameraDisplayOrientation(Activity activity, int cameraId, android.hardware.Camera camera) {
