@@ -15,4 +15,9 @@
     <string name="toast_picture_saved">Фотография сохранена</string>
     <string name="toast_picture_updated">Фотография обновлена</string>
     <string name="toast_exit">Для выхода коснитесь еще раз</string>
+    <string name="action_mode_delete_button">Удалить</string>
+    <string name="action_mode_select_all_button">Выбрать все</string>
+    <string name="action_mode_deleted">Фотографии удалены</string>
+    <string name="dialog_delete_main_text">Вы уверены?</string>
+    <string name="dialog_delete_title">Удалить фотографии</string>
 </resources>

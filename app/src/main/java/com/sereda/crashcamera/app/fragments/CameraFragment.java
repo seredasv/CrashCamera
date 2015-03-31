@@ -18,6 +18,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.util.Log;
 import android.view.*;
 import android.widget.Button;
 import android.widget.Toast;
@@ -27,12 +28,16 @@ import com.sereda.crashcamera.app.utils.DBHelper;
 import org.lucasr.twowayview.TwoWayView;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class CameraFragment extends Fragment {
+    private static final ExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadExecutor();
     public static boolean isUpdated = false;
     public static int updatedID;
     private static int QUANTITY_OF_PERMITTED_PHOTO = 7;
@@ -43,6 +48,7 @@ public class CameraFragment extends Fragment {
     private View view;
     private File file;
     private PicturesAdapter adapter;
+    private Runnable runnable;
     private Camera.ShutterCallback shutterCallback = new Camera.ShutterCallback() {
         @Override
         public void onShutter() {
@@ -103,11 +109,7 @@ public class CameraFragment extends Fragment {
                         File dir = getActivity().getFilesDir();
                         file = new File(dir, fileName);
 
-                        try {
-                            rotateImage(file.toString());
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        rotateImage(file.toString());
 
                         cv.put(DBHelper.PHOTO_ITEM_ID, id);
                         cv.put(DBHelper.PHOTO_FILE_NAME, fileName);
@@ -121,11 +123,7 @@ public class CameraFragment extends Fragment {
                         File dir = getActivity().getFilesDir();
                         file = new File(dir, fileName);
 
-                        try {
-                            rotateImage(file.toString());
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        rotateImage(file.toString());
 
                         cv.put(DBHelper.PHOTO_ITEM_ID, id);
                         cv.put(DBHelper.PHOTO_FILE_NAME, fileName);
@@ -134,9 +132,9 @@ public class CameraFragment extends Fragment {
                         cv.clear();
                         Toast.makeText(getActivity(), getString(R.string.toast_picture_saved), Toast.LENGTH_SHORT).show();
 
-                        updateAdapter();
-
                         isUpdated = false;
+
+                        updateAdapter();
                     }
                 }
 
@@ -182,9 +180,11 @@ public class CameraFragment extends Fragment {
         adapter = new PicturesAdapter(getActivity(), R.layout.item_list_two_way_view, cursor, from, to, 0);
         TwoWayView listView = (TwoWayView) view.findViewById(R.id.two_way_view_list_picture);
         listView.setAdapter(adapter);
+
     }
 
     private void updateAdapter() {
+        Log.e("mylog", "update Adapter");
         if (db != null && db.isOpen()) {
             Cursor cursor = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_PHOTO + " WHERE " + DBHelper.PHOTO_ITEM_ID
                     + " = ? ORDER BY " + DBHelper.ID + " ASC", new String[]{String.valueOf(id)});
@@ -219,7 +219,8 @@ public class CameraFragment extends Fragment {
         buttonMakePicture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (camera != null) {
+                if (null != camera) {
+                    // TODO fix bug with crash (if app is open and screen is turn-off and turn-on again)
                     camera.takePicture(shutterCallback, null, jpegCallback);
                 }
             }
@@ -295,7 +296,7 @@ public class CameraFragment extends Fragment {
         return view;
     }
 
-    public void rotateImage(String fileName) throws IOException {
+    public void rotateImage(final String fileName) {
         BitmapFactory.Options bounds = new BitmapFactory.Options();
         bounds.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(fileName, bounds);
@@ -308,13 +309,25 @@ public class CameraFragment extends Fragment {
         Matrix matrix = new Matrix();
         matrix.postRotate(rotationAngle, (float) bm.getWidth() / 2, (float) bm.getHeight() / 2);
         Bitmap rotatedBitmap = Bitmap.createBitmap(bm, 0, 0, bounds.outWidth, bounds.outHeight, matrix, true);
-        FileOutputStream fos = new FileOutputStream(fileName);
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream(fileName);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
         rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
-        fos.flush();
-        fos.close();
+        try {
+            if (null != fos) {
+                fos.flush();
+                fos.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
-    private void setCameraDisplayOrientation(Activity activity, int cameraId, android.hardware.Camera camera) {
+    private void setCameraDisplayOrientation(Activity activity, int cameraId, Camera camera) {
         CameraInfo info = new CameraInfo();
         Camera.getCameraInfo(cameraId, info);
         int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();

@@ -11,7 +11,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 import com.sereda.crashcamera.app.R;
-import com.sereda.crashcamera.app.adapters.LeftAdapter;
 import com.sereda.crashcamera.app.adapters.RightAdapter;
 import com.sereda.crashcamera.app.utils.DBHelper;
 import com.squareup.picasso.Picasso;
@@ -20,8 +19,8 @@ import org.lucasr.twowayview.TwoWayView;
 import java.io.File;
 
 public class RightFragment extends Fragment {
-    public static ImageView imageView;
     private static final int IMAGE_RESIZE = 8;
+    public static ImageView imageView;
     private int id;
     private SQLiteDatabase db;
 

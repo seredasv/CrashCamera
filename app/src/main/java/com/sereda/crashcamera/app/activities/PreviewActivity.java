@@ -12,8 +12,6 @@ import com.sereda.crashcamera.app.fragments.RightFragment;
 import com.sereda.crashcamera.app.utils.DBHelper;
 
 public class PreviewActivity extends ActionBarActivity {
-    private final String backStackLeftFragment = "LeftFragment";
-    private final String backStackRightFragment = "RightFragment";
     private int id;
 
     @Override

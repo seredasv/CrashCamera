@@ -3,7 +3,6 @@ package com.sereda.crashcamera.app.adapters;
 import android.content.Context;
 import android.database.Cursor;
 import android.widget.ImageView;
-import com.sereda.crashcamera.app.fragments.LeftFragment;
 import com.sereda.crashcamera.app.fragments.RightFragment;
 
 public class RightAdapter extends AbstractPreviewAdapter {
