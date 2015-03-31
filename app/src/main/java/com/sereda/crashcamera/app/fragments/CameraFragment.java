@@ -18,7 +18,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.util.Log;
 import android.view.*;
 import android.widget.Button;
 import android.widget.Toast;
@@ -43,6 +42,7 @@ public class CameraFragment extends Fragment {
     private SQLiteDatabase db;
     private View view;
     private File file;
+    private PicturesAdapter adapter;
     private Camera.ShutterCallback shutterCallback = new Camera.ShutterCallback() {
         @Override
         public void onShutter() {
@@ -116,7 +116,7 @@ public class CameraFragment extends Fragment {
                         cv.clear();
                         Toast.makeText(getActivity(), getString(R.string.toast_picture_saved), Toast.LENGTH_SHORT).show();
 
-                        createAdapter(view);
+                        updateAdapter();
                     } else {
                         File dir = getActivity().getFilesDir();
                         file = new File(dir, fileName);
@@ -134,7 +134,7 @@ public class CameraFragment extends Fragment {
                         cv.clear();
                         Toast.makeText(getActivity(), getString(R.string.toast_picture_saved), Toast.LENGTH_SHORT).show();
 
-                        createAdapter(view);
+                        updateAdapter();
 
                         isUpdated = false;
                     }
@@ -179,10 +179,17 @@ public class CameraFragment extends Fragment {
         String[] from = new String[]{DBHelper.PHOTO_URI};
         int[] to = new int[]{R.id.two_way_view_item_iv_picture};
 
-        PicturesAdapter adapter = new PicturesAdapter(getActivity(), R.layout.item_list_two_way_view, cursor, from, to, 0);
+        adapter = new PicturesAdapter(getActivity(), R.layout.item_list_two_way_view, cursor, from, to, 0);
         TwoWayView listView = (TwoWayView) view.findViewById(R.id.two_way_view_list_picture);
         listView.setAdapter(adapter);
-        adapter.changeCursor(cursor);
+    }
+
+    private void updateAdapter() {
+        if (db != null && db.isOpen()) {
+            Cursor cursor = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_PHOTO + " WHERE " + DBHelper.PHOTO_ITEM_ID
+                    + " = ? ORDER BY " + DBHelper.ID + " ASC", new String[]{String.valueOf(id)});
+            adapter.changeCursor(cursor);
+        }
     }
 
     private int picturesQuantity() {
@@ -282,6 +289,8 @@ public class CameraFragment extends Fragment {
                 }
             }
         });
+
+        createAdapter(view);
 
         return view;
     }
