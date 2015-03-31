@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.hardware.Camera;
+import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.Parameters;
 import android.hardware.Camera.Size;
 import android.net.Uri;
@@ -219,24 +220,30 @@ public class CameraFragment extends Fragment {
     }
 
     private void setCameraDisplayOrientation(Activity activity, int cameraId, android.hardware.Camera camera) {
-        android.hardware.Camera.CameraInfo info =
-                new android.hardware.Camera.CameraInfo();
-        android.hardware.Camera.getCameraInfo(cameraId, info);
-        int rotation = activity.getWindowManager().getDefaultDisplay()
-                .getRotation();
+        CameraInfo info = new CameraInfo();
+        Camera.getCameraInfo(cameraId, info);
+        int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
         int degrees = 0;
         switch (rotation) {
-            case Surface.ROTATION_0: degrees = 0; break;
-            case Surface.ROTATION_90: degrees = 90; break;
-            case Surface.ROTATION_180: degrees = 180; break;
-            case Surface.ROTATION_270: degrees = 270; break;
+            case Surface.ROTATION_0:
+                degrees = 0;
+                break;
+            case Surface.ROTATION_90:
+                degrees = 90;
+                break;
+            case Surface.ROTATION_180:
+                degrees = 180;
+                break;
+            case Surface.ROTATION_270:
+                degrees = 270;
+                break;
         }
 
         int result;
-        if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+        if (info.facing == CameraInfo.CAMERA_FACING_FRONT) {
             result = (info.orientation + degrees) % 360;
-            result = (360 - result) % 360;  // compensate the mirror
-        } else {  // back-facing
+            result = (360 - result) % 360;
+        } else {
             result = (info.orientation - degrees + 360) % 360;
         }
         camera.setDisplayOrientation(result);
@@ -246,45 +253,21 @@ public class CameraFragment extends Fragment {
         final double ASPECT_TOLERANCE = 0.1;
         double targetRatio = (double) height / width;
 
-        if (sizes == null) return null;
+        if (null == sizes) {
+            return null;
+        }
 
         Size optimalSize = null;
-        double minDiff = Double.MAX_VALUE;
 
         for (Size size : sizes) {
+            if (size.height != width) continue;
             double ratio = (double) size.width / size.height;
-            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue;
-            if (Math.abs(size.height - height) < minDiff) {
+            if (ratio <= targetRatio + ASPECT_TOLERANCE && ratio >= targetRatio - ASPECT_TOLERANCE) {
                 optimalSize = size;
-                minDiff = Math.abs(size.height - height);
             }
         }
 
-//        if (optimalSize == null) {
-//            minDiff = Double.MAX_VALUE;
-//            for (Size size : sizes) {
-//                if (Math.abs(size.height - height) < minDiff) {
-//                    optimalSize = size;
-//                    minDiff = Math.abs(size.height - height);
-//                }
-//            }
-//        }
         return optimalSize;
-    }
-
-    private Size getBestSupportSize(List<Size> sizes, int width, int height) {
-        Size bestSize = sizes.get(0);
-        int largestArea = bestSize.width * bestSize.height;
-
-        for (Size size : sizes) {
-            int area = size.width * size.height;
-            if (area > largestArea) {
-                bestSize = size;
-                largestArea = area;
-            }
-        }
-
-        return bestSize;
     }
 
     @Override
