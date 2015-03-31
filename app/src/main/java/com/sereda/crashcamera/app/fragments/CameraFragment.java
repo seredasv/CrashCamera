@@ -63,7 +63,7 @@ public class CameraFragment extends Fragment {
             if (isUpdated) {
                 QUANTITY_OF_PERMITTED_PHOTO = 8;
             } else {
-                QUANTITY_OF_PERMITTED_PHOTO = 7;
+                QUANTITY_OF_PERMITTED_PHOTO++;
             }
 
             if (QUANTITY_OF_PERMITTED_PHOTO != picturesQuantity()) {
